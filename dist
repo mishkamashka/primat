@@ -3,7 +3,7 @@ use List::MoreUtils qw(first_index);
 
 $string;
 @stack = ('#');
-@symbols = qw(A B C F a b c d x);
+@symbols = qw(A B C F a b c x d);
 @rules = (["AaB", "B"], ["CbB", "C"], ["cF", "x"], ["Ad"]);
 @less = (
 [0,0,0,0,0,0,0,0,0],
@@ -73,6 +73,7 @@ sub fold {
 	}
 }
 
+
 sub recognise {
 	@string = split //, @_[0];
 	foreach $cur_letter (@string) {
@@ -86,15 +87,17 @@ suc_fold:
 			push(@stack, $cur_letter);
 		} else { 
 			if ($more[$i][$j] or ($cur_letter eq '#')) {
-				print "folding\n"; 
+				print "folding\n";
 				if (fold == -1) { return -1;}
 				goto suc_fold;
 			}
 			else {print "error - no relation between $stack[-1] and $cur_letter \n"; return -1;}
 		}
+		print "stack: @stack\n"; 
 		if ($cur_letter eq '#') {
 			$result = join("", @stack);
-			if ($result eq ("#A#")) { return 0;}
+			print "RESULT $result\n";
+			if (($result eq ("#A#")) or ($result eq ("#F#"))) { return 0;}
 			else {return -1;}
 		}
 		print "eq: $eq[$i][$j]\n";
