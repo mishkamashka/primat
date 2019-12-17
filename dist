@@ -1,0 +1,106 @@
+#! /usr/bin/perl
+use List::MoreUtils qw(first_index);
+
+$string;
+@stack = ('#', 'c', 'F');
+@symbols = qw(A B C F a b c d x);
+@rules = (["AaB", "B"], ["CbB", "C"], ["cF", "x"], ["Ad"]);
+@less = (
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,1,0,0,0,1,1,0],
+[0,0,1,0,0,0,1,1,0],
+[1,1,1,0,0,0,1,1,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0]);
+
+@more = (
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,1,0,0,0,1],
+[0,0,0,0,1,0,0,0,1],
+[0,0,0,0,1,1,0,0,1],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,1,1,0,0,1],
+[0,0,0,0,1,1,0,0,1]);
+
+@eq = (
+[0,0,0,0,1,0,0,0,1],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,1,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,1,0,0,0,0,0,0,0],
+[0,1,0,0,0,0,0,0,0],
+[0,0,0,1,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0]);
+
+
+sub fold {
+	$s = @_[0];
+	push(@base, pop(@stack));
+	$j = first_index {$_ eq $base[-1]} @symbols;
+	$i = first_index {$_ eq $stack[-1]} @symbols;
+
+	print "fold:\n base:@base, stack: @stack\n";
+	while (!$less[$i][$j] and !($stack[-1] eq '#')) {
+		push(@base, pop(@stack));
+		$j = first_index {$_ eq $base[-1]} @symbols;
+		$i = first_index {$_ eq $stack[-1]} @symbols;
+		print "base:@base, stack: @stack\n";
+	}
+	@base = reverse @base;
+	$string = join("", @base);
+	print "$string\n";
+	$letter = '';
+	for (my $k=0; $k <= 3 and ($letter eq ''); $k++) {
+	for (my $n=0; $n <= 1 and ($letter eq ''); $n++) {
+ 		if ($rules[$k][$n] eq $string) {
+			print "$string = $rules[$k][$n]\n - letter $symbols[$k]\n";
+			$letter = $symbols[$k];
+		} 
+	}}
+	if ($letter eq '') { return -1;}
+	else {
+		push(@stack, $letter);
+		print "stack: @stack\n";
+		return 0;
+	}
+}
+
+sub recognise {
+	@string = split //, @_[0];
+
+	foreach $s (@string) {
+		$j = first_index {$_ eq $s} @symbols;
+		$i = first_index {$_ eq $stack[-1]} @symbols;
+
+		if ($eq[$i][$j] or $less[$i][$j]) {
+			print "{@stack} <- moving $s\n";
+			push(@stack, $s);
+		} else { 
+			if ($more[$i][$j]) {
+				print "fold\n"; 
+				fold;}
+			else {print "error\n"; return -1;}
+		}
+
+		print "eq: $eq[$i][$j]\n";
+	}
+	print "\n@string\n";
+	
+
+
+	return 0;
+}
+
+while (1) {
+	chomp ($string = <STDIN>);
+	$i = recognise("$string");
+	if ($i == -1) {
+		print "error\n";
+	}
+}
